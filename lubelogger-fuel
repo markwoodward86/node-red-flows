@@ -1,0 +1,447 @@
+[
+    {
+        "id": "70112083a7ed8c27",
+        "type": "tab",
+        "label": "Lubelogger Fuel",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3551d60a27eb329a",
+        "type": "function",
+        "z": "70112083a7ed8c27",
+        "name": "Combine Sensor Data",
+        "func": "// Check if the payload is an array and has at least 4 elements\nif (Array.isArray(msg.payload) && msg.payload.length >= 4) {\n  // Extract elements from the array\n  const cost = msg.payload[0];\n  const fuelConsumed = msg.payload[1];\n  const odometer = parseFloat(msg.payload[2]);\n  const odometerLatest = parseFloat(msg.payload[3]);\n\n  // Check if all necessary values are present\n  if (!isNaN(odometer) && !isNaN(odometerLatest)) {\n    // Compare odometer readings\n    const difference = Math.abs(odometer - odometerLatest);\n    if (difference >= 1) { // Replace 300 with your threshold\n      // Generate the current date in YYYY-MM-DD format\n      const currentDate = (new Date()).toISOString().split('T')[0];\n\n      // Create the new form data\n      const formData = {\n        date: currentDate, // Use the current date\n        odometer: Math.round(odometer), // Round the odometer reading\n        cost: cost,\n        fuelConsumed: fuelConsumed,\n        isFillToFull: true,\n        missedFuelUp: false,\n        vehicleId: 2\n        // ... Add any other necessary properties for your form data\n      };\n\n      // Assign only the form data to msg.payload\n      msg.payload = formData;\n\n      // Forward the message to the POST request node\n      return msg;\n    } else {\n      console.log('Odometer difference below threshold, preventing data submission');\n      // Optional error handling or notification here\n      node.warn('Odometer difference below threshold, preventing data submission');\n      return null; // Do not send the payload\n    }\n  } else {\n    node.error('Invalid odometer value');\n    return null; // Do not send the payload\n  }\n} else {\n  node.error('Payload is not an array or does not have enough elements');\n  return null; // Do not send the payload\n}\n",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 280,
+        "wires": [
+            [
+                "621a54a0ec5d7dd1",
+                "ef7e5127abbd82f9",
+                "3752cd37d8a794f3"
+            ]
+        ]
+    },
+    {
+        "id": "621a54a0ec5d7dd1",
+        "type": "http request",
+        "z": "70112083a7ed8c27",
+        "name": "Send to Lubelogger",
+        "method": "POST",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://192.168.50.72:8080/api/vehicle/gasrecords/add?vehicleId=2",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "basic",
+        "senderr": false,
+        "headers": [
+            {
+                "keyType": "Content-Type",
+                "keyValue": "",
+                "valueType": "multipart/form-data",
+                "valueValue": ""
+            }
+        ],
+        "x": 1100,
+        "y": 240,
+        "wires": [
+            [
+                "775599860aee583e"
+            ]
+        ]
+    },
+    {
+        "id": "775599860aee583e",
+        "type": "debug",
+        "z": "70112083a7ed8c27",
+        "name": "API Response",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1100,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "b3462f69328034eb",
+        "type": "api-current-state",
+        "z": "70112083a7ed8c27",
+        "name": "Cost",
+        "server": "6c181b53.32fa14",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is_not",
+        "entity_id": "input_number.car_charging_yesterdays_cost",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "cost",
+                "valueType": "str"
+            }
+        ],
+        "for": "0",
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "entity_location": "data",
+        "override_data": "msg",
+        "x": 390,
+        "y": 300,
+        "wires": [
+            [
+                "ed704b773dd4ff21"
+            ]
+        ]
+    },
+    {
+        "id": "ef7e5127abbd82f9",
+        "type": "debug",
+        "z": "70112083a7ed8c27",
+        "name": "debug 28",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 860,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "b73badfc58ef6c1f",
+        "type": "inject",
+        "z": "70112083a7ed8c27",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "01 00 * * *",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "100",
+        "payloadType": "num",
+        "x": 70,
+        "y": 320,
+        "wires": [
+            [
+                "b3462f69328034eb",
+                "e66a147e6dc532d7",
+                "5a07f8e48d2c1153",
+                "5e452fa587632f6b"
+            ]
+        ]
+    },
+    {
+        "id": "5a07f8e48d2c1153",
+        "type": "api-current-state",
+        "z": "70112083a7ed8c27",
+        "name": "Get Odometer",
+        "server": "541ade28.b4a62",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is_not",
+        "entity_id": "input_number.car_odometer_preserved",
+        "state_type": "str",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "odometer",
+                "valueType": "str"
+            }
+        ],
+        "for": 0,
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "override_data": "msg",
+        "x": 400,
+        "y": 220,
+        "wires": [
+            [
+                "ed704b773dd4ff21"
+            ]
+        ]
+    },
+    {
+        "id": "e66a147e6dc532d7",
+        "type": "api-current-state",
+        "z": "70112083a7ed8c27",
+        "name": "Fuel Consumed",
+        "server": "541ade28.b4a62",
+        "version": 3,
+        "outputs": 1,
+        "halt_if": "",
+        "halt_if_type": "str",
+        "halt_if_compare": "is",
+        "entity_id": "input_number.car_charging_yesterdays_kwh",
+        "state_type": "num",
+        "blockInputOverrides": false,
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entityState"
+            },
+            {
+                "property": "data",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "entity"
+            },
+            {
+                "property": "topic",
+                "propertyType": "msg",
+                "value": "fuelConsumed",
+                "valueType": "str"
+            }
+        ],
+        "for": 0,
+        "forType": "num",
+        "forUnits": "minutes",
+        "override_topic": false,
+        "state_location": "payload",
+        "override_payload": "msg",
+        "override_data": "msg",
+        "x": 400,
+        "y": 120,
+        "wires": [
+            [
+                "ed704b773dd4ff21"
+            ]
+        ]
+    },
+    {
+        "id": "ed704b773dd4ff21",
+        "type": "join",
+        "z": "70112083a7ed8c27",
+        "name": "join",
+        "mode": "custom",
+        "build": "array",
+        "property": "payload",
+        "propertyType": "msg",
+        "key": "topic",
+        "joiner": "\\n",
+        "joinerType": "str",
+        "useparts": true,
+        "accumulate": false,
+        "timeout": "",
+        "count": "4",
+        "reduceRight": false,
+        "reduceExp": "",
+        "reduceInit": "",
+        "reduceInitType": "",
+        "reduceFixup": "",
+        "x": 690,
+        "y": 240,
+        "wires": [
+            [
+                "3551d60a27eb329a",
+                "5e81557b1c2bcd3b"
+            ]
+        ]
+    },
+    {
+        "id": "5e81557b1c2bcd3b",
+        "type": "debug",
+        "z": "70112083a7ed8c27",
+        "name": "debug 35",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5e452fa587632f6b",
+        "type": "http request",
+        "z": "70112083a7ed8c27",
+        "name": "latest odometer",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "http://192.168.50.72:8080/api/vehicle/odometerrecords/latest?vehicleId=2",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "basic",
+        "senderr": false,
+        "headers": [],
+        "x": 400,
+        "y": 380,
+        "wires": [
+            [
+                "9ffad7f183c7d317",
+                "ed704b773dd4ff21"
+            ]
+        ]
+    },
+    {
+        "id": "9ffad7f183c7d317",
+        "type": "debug",
+        "z": "70112083a7ed8c27",
+        "name": "debug 36",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "3752cd37d8a794f3",
+        "type": "api-call-service",
+        "z": "70112083a7ed8c27",
+        "d": true,
+        "name": "Fuel up notification to Mark",
+        "server": "6c181b53.32fa14",
+        "version": 7,
+        "debugenabled": true,
+        "action": "notify.mobile_app_pixel_9_pro",
+        "floorId": [],
+        "areaId": [],
+        "deviceId": [],
+        "entityId": [],
+        "labelId": [],
+        "data": "{ \t    \"message\": msg.payload\t}",
+        "dataType": "jsonata",
+        "mergeContext": "",
+        "mustacheAltTags": false,
+        "outputProperties": [],
+        "queue": "none",
+        "blockInputOverrides": false,
+        "domain": "notify",
+        "service": "mobile_app_pixel_9_pro",
+        "x": 1100,
+        "y": 360,
+        "wires": [
+            [
+                "9cef07aed2955a02"
+            ]
+        ]
+    },
+    {
+        "id": "9cef07aed2955a02",
+        "type": "debug",
+        "z": "70112083a7ed8c27",
+        "name": "debug 13",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1250,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "6c181b53.32fa14",
+        "type": "server",
+        "name": "Home Assistant",
+        "addon": true,
+        "rejectUnauthorizedCerts": true,
+        "ha_boolean": "",
+        "connectionDelay": false,
+        "cacheJson": false,
+        "heartbeat": false,
+        "heartbeatInterval": "",
+        "statusSeparator": "",
+        "enableGlobalContextStore": false
+    },
+    {
+        "id": "541ade28.b4a62",
+        "type": "server",
+        "name": "Home Assistant",
+        "version": 5,
+        "addon": true,
+        "rejectUnauthorizedCerts": true,
+        "ha_boolean": "",
+        "connectionDelay": false,
+        "cacheJson": false,
+        "heartbeat": false,
+        "heartbeatInterval": "",
+        "areaSelector": "friendlyName",
+        "deviceSelector": "friendlyName",
+        "entitySelector": "friendlyName",
+        "statusSeparator": "at: ",
+        "statusYear": "hidden",
+        "statusMonth": "short",
+        "statusDay": "numeric",
+        "statusHourCycle": "h23",
+        "statusTimeFormat": "h:m",
+        "enableGlobalContextStore": true
+    }
+]
