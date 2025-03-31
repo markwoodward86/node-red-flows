@@ -1,0 +1,227 @@
+[
+    {
+        "id": "ba13bec41d82eeb9",
+        "type": "tab",
+        "label": "Lubelogger Notices",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "09f60e16ba3d01e1",
+        "type": "function",
+        "z": "ba13bec41d82eeb9",
+        "name": "function 5",
+        "func": "// Parse the JSON string into a JavaScript array\nconst lubeloggerNotices = JSON.parse(msg.payload);\n\n// Log the parsed data\nconsole.log(\"Parsed Payload Data:\", lubeloggerNotices);\n\n// Check if lubeloggerNotices is undefined or empty\nif (!lubeloggerNotices || lubeloggerNotices.length === 0) {\n    console.log(\"Lubelogger Notices array is empty or undefined\");\n} else {\n    // Iterate through lubeloggerNotices\n    lubeloggerNotices.forEach((notice, index) => {\n        console.log(`Notice ${index + 1}:`, notice);\n    });\n\n    // Construct sensor attributes dynamically based on the number of notices\n    const attributes = {};\n\n    lubeloggerNotices.forEach((notice, index) => {\n        attributes[`notice_${index + 1}_description`] = notice.description;\n        attributes[`notice_${index + 1}_urgency`] = notice.urgency;\n        attributes[`notice_${index + 1}_type`] = notice.notes;\n    });\n\n    // Construct a single data object\n    const sensorData = {\n        state: \"lubelogger_notice\",\n        attributes: attributes\n    };\n\n    // Construct entity ID for your sensor\n    const sensorId = \"sensor.lubelogger_notice\";\n\n    // Message to send to Home Assistant\n    const message = { payload: sensorData, topic: sensorId };\n\n    return [message];\n}\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 340,
+        "wires": [
+            [
+                "bba295413ceffc91",
+                "759f2d7e7366e4f5",
+                "af5c23190b344a28"
+            ]
+        ]
+    },
+    {
+        "id": "bba295413ceffc91",
+        "type": "mqtt out",
+        "z": "ba13bec41d82eeb9",
+        "name": "node",
+        "topic": "",
+        "qos": "",
+        "retain": "true",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "21a27370f5b35f49",
+        "x": 540,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "759f2d7e7366e4f5",
+        "type": "ha-api",
+        "z": "ba13bec41d82eeb9",
+        "name": "sensor",
+        "server": "6c181b53.32fa14",
+        "version": 1,
+        "debugenabled": false,
+        "protocol": "http",
+        "method": "post",
+        "path": "/api/states/{{topic}}",
+        "data": "msg.payload",
+        "dataType": "jsonata",
+        "responseType": "json",
+        "outputProperties": [
+            {
+                "property": "payload",
+                "propertyType": "msg",
+                "value": "",
+                "valueType": "results"
+            }
+        ],
+        "x": 720,
+        "y": 340,
+        "wires": [
+            [
+                "d08fbdcba8e960af"
+            ]
+        ]
+    },
+    {
+        "id": "af5c23190b344a28",
+        "type": "debug",
+        "z": "ba13bec41d82eeb9",
+        "name": "debug 41",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "d08fbdcba8e960af",
+        "type": "debug",
+        "z": "ba13bec41d82eeb9",
+        "name": "debug 42",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 880,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "b9f3e44489f1d1f8",
+        "type": "debug",
+        "z": "ba13bec41d82eeb9",
+        "name": "debug 43",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 420,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "79fd7174d03ed025",
+        "type": "http request",
+        "z": "ba13bec41d82eeb9",
+        "name": "Lubelogger Notices",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "body",
+        "url": "http://192.168.50.72:8080/api/vehicle/reminders?vehicleId=2",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "basic",
+        "senderr": false,
+        "headers": [],
+        "x": 270,
+        "y": 340,
+        "wires": [
+            [
+                "b9f3e44489f1d1f8",
+                "09f60e16ba3d01e1"
+            ]
+        ]
+    },
+    {
+        "id": "423e6fd0a871aab4",
+        "type": "inject",
+        "z": "ba13bec41d82eeb9",
+        "name": "Trigger every hour",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "3600",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 90,
+        "y": 260,
+        "wires": [
+            [
+                "79fd7174d03ed025"
+            ]
+        ]
+    },
+    {
+        "id": "21a27370f5b35f49",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "192.168.50.93",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "msg.payload",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "6c181b53.32fa14",
+        "type": "server",
+        "name": "Home Assistant",
+        "addon": true,
+        "rejectUnauthorizedCerts": true,
+        "ha_boolean": "",
+        "connectionDelay": false,
+        "cacheJson": false,
+        "heartbeat": false,
+        "heartbeatInterval": "",
+        "statusSeparator": "",
+        "enableGlobalContextStore": false
+    }
+]
